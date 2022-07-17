@@ -1,0 +1,12 @@
+//
+// Created by 58286 on 2022/7/17.
+//
+
+#ifndef WINDMILL_CORE_INC_USER_CONFIG_H_
+#define WINDMILL_CORE_INC_USER_CONFIG_H_
+
+#define STRIP_LENGTH 110
+#define BOARD_LENGTH 320
+
+
+#endif // WINDMILL_CORE_INC_USER_CONFIG_H_
