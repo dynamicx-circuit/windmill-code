@@ -58,13 +58,22 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint8_t flag = 0;
-uint8_t counter = 0;
+//uint8_t counter = 0;
 uint8_t led_on[24];
 uint8_t led_off[24];
 
+uint8_t strip[5][24];
+
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
-  WS2812_StopDMA();
+  WS2812_StopDMA(htim);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance == TIM3){
+    WS2812_Update();
+  }
 }
 /* USER CODE END 0 */
 
@@ -75,7 +84,6 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -106,18 +114,37 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   WS2812_Init();
+  HAL_TIM_Base_Start_IT(&htim3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  windmill.strip1 = DISPLAY_ON;
+
+//  windmill.strip2 = DISPLAY_ON;
+//  HAL_Delay(1000);
+//  __HAL_TIM_SET_COMPARE(STRIP2_TIM,STRIP2_CHANNEL,0);
+//  windmill.strip2 = DISPLAY_OFF;
+//  HAL_Delay(1000);
+//  __HAL_TIM_SET_COMPARE(STRIP2_TIM,STRIP2_CHANNEL,0);
+  windmill.strip2 = DISPLAY_TOP;
+
+//  windmill.board2 = DISPLAY_FLOW;
+//  WS2812_FlowUpdate();
+//  WS2812_FlowUpdate();
+//  WS2812_FlowUpdate();
+//  WS2812_FlowUpdate();
+  uint16_t counter = 0;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    WS2812_Update();
-    HAL_Delay(1);
+//    __HAL_TIM_SET_COMPARE(STRIP2_TIM,STRIP2_CHANNEL,0);
+//    windmill.strip2 = DISPLAY_ON;
+//    windmill.strip2 = DISPLAY_ON;
+    windmill.board2 = DISPLAY_FLOW;
+    WS2812_FlowUpdate();
+    HAL_Delay(200);
   }
   /* USER CODE END 3 */
 }

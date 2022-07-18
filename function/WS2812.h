@@ -36,15 +36,14 @@
 #define BOARD4_CHANNEL TIM_CHANNEL_4
 #define BOARD5_CHANNEL TIM_CHANNEL_1
 
-#define WS2812_H 36
+#define WS2812_H 52
 #define WS2812_L 21
 
 #define WS2812_OFF 0
 #define WS2812_RED 50<<8
-#define WS2812_BLUE 50
+#define WS2812_BLUE 50<<16
 
-#define STRIP1_ALL_ON()
-
+#define WINDMILL_INIT_COLOR WS2812_RED
 
 typedef enum{
   WAIT_FOR_DISPLAY = 0,
@@ -73,7 +72,7 @@ typedef struct {
       uint8_t board4;
       uint8_t board5;
     };
-    uint8_t board[5];
+    uint8_t boards[5];
   };
 }WindmillStruct;
 
@@ -81,6 +80,7 @@ extern WindmillStruct windmill;
 
 void WS2812_Init(void);
 void WS2812_Update(void);
-void WS2812_StopDMA(void);
+void WS2812_FlowUpdate(void);
+void WS2812_StopDMA(TIM_HandleTypeDef *htim);
 
 #endif // WINDMILL_FUNCTION_WS2812_H_
