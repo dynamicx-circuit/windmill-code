@@ -126,8 +126,8 @@ int main(void)
 //  windmill.strip2 = DISPLAY_OFF;
 //  HAL_Delay(1000);
 //  __HAL_TIM_SET_COMPARE(STRIP2_TIM,STRIP2_CHANNEL,0);
-  windmill.strip2 = DISPLAY_TOP;
-
+//  windmill.strip2 = DISPLAY_TOP;
+    WS2812_SetState(STRIP2,DISPLAY_TOP);
 //  windmill.board2 = DISPLAY_FLOW;
 //  WS2812_FlowUpdate();
 //  WS2812_FlowUpdate();
@@ -142,7 +142,8 @@ int main(void)
 //    __HAL_TIM_SET_COMPARE(STRIP2_TIM,STRIP2_CHANNEL,0);
 //    windmill.strip2 = DISPLAY_ON;
 //    windmill.strip2 = DISPLAY_ON;
-    windmill.board2 = DISPLAY_FLOW;
+//    windmill.board2 = DISPLAY_FLOW;
+    WS2812_SetState(BOARD2,DISPLAY_FLOW);
     WS2812_FlowUpdate();
     HAL_Delay(200);
   }

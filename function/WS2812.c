@@ -3,6 +3,29 @@
 //
 #include "WS2812.h"
 
+typedef struct {
+  union {
+    struct{
+      uint8_t strip1;
+      uint8_t strip2;
+      uint8_t strip3;
+      uint8_t strip4;
+      uint8_t strip5;
+    };
+    uint8_t strips[5];
+  };
+  union{
+    struct {
+      uint8_t board1;
+      uint8_t board2;
+      uint8_t board3;
+      uint8_t board4;
+      uint8_t board5;
+    };
+    uint8_t boards[5];
+  };
+}WindmillStruct;
+
 WindmillStruct windmill;
 
 typedef struct {
@@ -69,11 +92,6 @@ void WS2812_FlowUpdate(void)
 
 void WS2812_Init(void)
 {
-//  for(uint8_t i=0;i<2;i++){
-//    for(uint8_t j=0;j<24;j++){
-//      led_strip[i][j] = 0;
-//    }
-//
   memset(led_strip_on,0,(STRIP_LENGTH+1)*24);
   memset(led_strip_off,0,(STRIP_LENGTH+1)*24);
   memset(led_strip_top,0,(STRIP_LENGTH+1)*24);
@@ -202,5 +220,13 @@ void WS2812_StopDMA(TIM_HandleTypeDef *htim)
       HAL_TIM_PWM_Stop_DMA(windmill_tim_channel[i].htim,
                            windmill_tim_channel[i].tim_channel);
     }
+  }
+}
+
+void WS2812_SetState(uint8_t number,DisplayType state)
+{
+  if(state!=0 && state<4){
+    if(number<5) windmill.strips[number] = state;
+    else if(number<10) windmill.boards[number-5] = state;
   }
 }

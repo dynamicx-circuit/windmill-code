@@ -45,6 +45,19 @@
 
 #define WINDMILL_INIT_COLOR WS2812_RED
 
+enum{
+  STRIP1 = 0,
+  STRIP2 = 1,
+  STRIP3 = 2,
+  STRIP4 = 3,
+  STRIP5 = 4,
+  BOARD1 = 5,
+  BOARD2 = 6,
+  BOARD3 = 7,
+  BOARD4 = 8,
+  BOARD5 = 9,
+};
+
 typedef enum{
   WAIT_FOR_DISPLAY = 0,
   DISPLAY_ON = 1,
@@ -53,34 +66,10 @@ typedef enum{
   DISPLAY_TOP = 3,
 }DisplayType;
 
-typedef struct {
-  union {
-    struct{
-      uint8_t strip1;
-      uint8_t strip2;
-      uint8_t strip3;
-      uint8_t strip4;
-      uint8_t strip5;
-    };
-    uint8_t strips[5];
-  };
-  union{
-    struct {
-      uint8_t board1;
-      uint8_t board2;
-      uint8_t board3;
-      uint8_t board4;
-      uint8_t board5;
-    };
-    uint8_t boards[5];
-  };
-}WindmillStruct;
-
-extern WindmillStruct windmill;
-
 void WS2812_Init(void);
 void WS2812_Update(void);
 void WS2812_FlowUpdate(void);
 void WS2812_StopDMA(TIM_HandleTypeDef *htim);
+void WS2812_SetState(uint8_t number,DisplayType state);
 
 #endif // WINDMILL_FUNCTION_WS2812_H_
