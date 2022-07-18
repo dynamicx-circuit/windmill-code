@@ -46,7 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+extern DMA_HandleTypeDef hdma_tim2_ch1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,7 +57,15 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint8_t flag = 0;
+uint8_t counter = 0;
+uint8_t led_on[24];
+uint8_t led_off[24];
 
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+  WS2812_StopDMA();
+}
 /* USER CODE END 0 */
 
 /**
@@ -102,15 +110,14 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t led_on[24] = {WS2812_H};
-  uint8_t led_off[24] = {WS2812_L};
-
+  windmill.strip1 = DISPLAY_ON;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
+    WS2812_Update();
+    HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }

@@ -3,51 +3,146 @@
 //
 #include "WS2812.h"
 
-typedef struct{
+WindmillStruct windmill;
+
+typedef struct {
   TIM_HandleTypeDef *htim;
   uint32_t tim_channel;
-  uint16_t length;
-  uint8_t *leds;
-}LED_TypeStruct;
+}WindmillTIM_ChannelStruct;
 
-LED_TypeStruct led_struct[LED_NUM] ={
-        {&htim1,TIM_CHANNEL_3,STRIP_LENGTH,0},
-        {&htim2,TIM_CHANNEL_1,STRIP_LENGTH,0},
-        {&htim2,TIM_CHANNEL_2,STRIP_LENGTH,0},
-        {&htim1,TIM_CHANNEL_1,STRIP_LENGTH,0},
-        {&htim2,TIM_CHANNEL_3,STRIP_LENGTH,0},
-        {&htim5,TIM_CHANNEL_3,BOARD_LENGTH,0},
-        {&htim5,TIM_CHANNEL_2,BOARD_LENGTH,0},
-        {&htim5,TIM_CHANNEL_1,BOARD_LENGTH,0},
-        {&htim5,TIM_CHANNEL_4,BOARD_LENGTH,0},
-        {&htim8,TIM_CHANNEL_1,BOARD_LENGTH,0}
-    };
-uint32_t led_color_init[LED_ColorCategory] = {
-    WS2812_OFF,
-    WS2812_RED,
-    WS2812_BLUE
+WindmillTIM_ChannelStruct windmill_tim_channel[10];
+    
+uint8_t led_strip_on[STRIP_LENGTH][24];
+uint8_t led_strip_off[STRIP_LENGTH][24];
+uint8_t led_strip_top[STRIP_LENGTH][24];
+
+uint8_t led_board_on[BOARD_LENGTH][24];
+uint8_t led_board_off[BOARD_LENGTH][24];
+uint8_t led_flow[BOARD_LENGTH][24];
+
+uint8_t flow[48] = {
+    1,0,0,0,0,0,0,1,
+    1,1,0,0,0,0,1,1,
+    1,1,1,0,0,1,1,1,
+    0,1,1,1,1,1,1,0,
+    0,0,1,1,1,1,0,0,
+    0,0,0,1,1,0,0,0
 };
 
-uint8_t led_used_length = 0;
-uint8_t led_buffer[LED_LENGTH];
-uint8_t led_color[LED_ColorCategory][24];
+inline void SetSingleColor(uint8_t* led,uint32_t color)
+{
+  for(uint8_t i=0;i<24;i++){
+    if((color>>i)&1) *led = WS2812_H;
+    else *led = WS2812_L;
+  }
+}
 
-void WS2812_Init(void){
-  for(uint8_t i=0;i<LED_NUM;i++){
-    if(led_struct->length + led_used_length > LED_LENGTH){
+void SetColor(uint32_t color,uint8_t leds[][24],uint32_t length)
+{
+  for(uint32_t i=0;i<length;i++)
+    SetSingleColor(leds[i],color);
+}
+
+void SetFlowColor(uint32_t color)
+{
+  for(uint32_t i=0;i<BOARD_LENGTH/48;i++){
+    for(uint8_t j=0;j<48;j++){
+      if(flow[j]) SetSingleColor(led_flow[48*i+j],color);
+      else SetSingleColor(led_flow[48*i+j],WS2812_OFF);
+    }
+  }
+}
+
+//void FlowUpdate(void)
+//{
+//
+//}
+
+void WS2812_Init(void)
+{
+  SetColor(WS2812_BLUE, led_strip_on,STRIP_LENGTH);
+  SetColor(WS2812_OFF, led_strip_off,STRIP_LENGTH);
+
+  SetColor(WS2812_OFF, led_strip_top,BOT_LENGTH);
+  SetColor(WS2812_BLUE, &led_strip_top[BOT_LENGTH],TOP_LENGTH);
+
+  SetColor(WS2812_BLUE,led_board_on,BOARD_LENGTH);
+  SetColor(WS2812_OFF,led_board_off,BOARD_LENGTH);
+
+  SetFlowColor(WS2812_BLUE);
+
+  windmill_tim_channel[0].htim = STRIP1_TIM;
+  windmill_tim_channel[0].tim_channel = STRIP1_CHANNEL;
+
+  windmill_tim_channel[1].htim = STRIP2_TIM;
+  windmill_tim_channel[1].tim_channel = STRIP2_CHANNEL;
+
+  windmill_tim_channel[2].htim = STRIP3_TIM;
+  windmill_tim_channel[2].tim_channel = STRIP3_CHANNEL;
+
+  windmill_tim_channel[3].htim = STRIP4_TIM;
+  windmill_tim_channel[3].tim_channel = STRIP4_CHANNEL;
+
+  windmill_tim_channel[4].htim = STRIP5_TIM;
+  windmill_tim_channel[4].tim_channel = STRIP5_CHANNEL;
+
+  windmill_tim_channel[5].htim = BOARD1_TIM;
+  windmill_tim_channel[5].tim_channel = BOARD1_CHANNEL;
+
+  windmill_tim_channel[6].htim = BOARD2_TIM;
+  windmill_tim_channel[6].tim_channel = BOARD2_CHANNEL;
+
+  windmill_tim_channel[7].htim = BOARD3_TIM;
+  windmill_tim_channel[7].tim_channel = BOARD3_CHANNEL;
+
+  windmill_tim_channel[8].htim = BOARD4_TIM;
+  windmill_tim_channel[8].tim_channel = BOARD4_CHANNEL;
+
+  windmill_tim_channel[9].htim = BOARD5_TIM;
+  windmill_tim_channel[9].tim_channel = BOARD5_CHANNEL;
+}
+
+void WS2812_Update(void)
+{
+  static uint8_t strip_index = 0;
+  static uint8_t board_index = 0;
+
+  for(;strip_index<5;strip_index++){
+    if(windmill.strips[strip_index] &&
+        TIM_CHANNEL_STATE_GET(windmill_tim_channel[strip_index].htim,
+                              windmill_tim_channel[strip_index].tim_channel)
+            == HAL_TIM_CHANNEL_STATE_READY){
+      switch (windmill.strips[strip_index]) {
+      case DISPLAY_ON:
+        HAL_TIM_PWM_Start_DMA(
+            windmill_tim_channel[strip_index].htim,windmill_tim_channel[strip_index].tim_channel,
+            (uint32_t*)led_strip_on,STRIP_LENGTH);
+        break;
+      case DISPLAY_OFF:
+        HAL_TIM_PWM_Start_DMA(
+            windmill_tim_channel[strip_index].htim,windmill_tim_channel[strip_index].tim_channel,
+            (uint32_t*)led_strip_off,STRIP_LENGTH);
+        break;
+      case DISPLAY_TOP:
+        HAL_TIM_PWM_Start_DMA(
+            windmill_tim_channel[strip_index].htim,windmill_tim_channel[strip_index].tim_channel,
+            (uint32_t*)led_strip_top,STRIP_LENGTH);
+        break;
+      default:break;
+      }
+      windmill.strips[strip_index] = WAIT_FOR_DISPLAY;
+      strip_index++;
+      if(strip_index==5) strip_index = 0;
       break;
     }
-    led_struct->leds = led_buffer+led_used_length;
-    led_used_length += led_struct->length;
   }
-  for(uint8_t i=0;i<LED_ColorCategory;i++){
-    uint32_t temp = led_color_init[i];
-    for(uint8_t j=0;j<24;j++){
-      if((temp >> j) != 0)
-        led_color[i][j] = WS2812_H;
-      else
-        led_color[i][j] = WS2812_L;
-    }
+}
+
+void WS2812_StopDMA(void)
+{
+  for(uint8_t i=0;i<10;i++){
+    HAL_TIM_PWM_Stop_DMA(
+        windmill_tim_channel[i].htim,windmill_tim_channel[i].tim_channel);
   }
 }
 
