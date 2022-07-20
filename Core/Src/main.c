@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "can.h"
 #include "dma.h"
 #include "tim.h"
@@ -26,7 +27,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "WS2812.h"
+//#include "WS2812.h"
+//#include "sensor.h"
+#include "windmill_logic.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,8 +76,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim->Instance == TIM3){
     WS2812_Update();
+  }else if(htim->Instance == TIM4){
+    WindmillUpdate();
   }
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -112,9 +118,13 @@ int main(void)
   MX_TIM8_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
+  MX_TIM6_Init();
+  MX_TIM4_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   WS2812_Init();
   HAL_TIM_Base_Start_IT(&htim3);
+  HAL_TIM_Base_Start_IT(&htim4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,12 +137,8 @@ int main(void)
 //  HAL_Delay(1000);
 //  __HAL_TIM_SET_COMPARE(STRIP2_TIM,STRIP2_CHANNEL,0);
 //  windmill.strip2 = DISPLAY_TOP;
-    WS2812_SetState(STRIP2,DISPLAY_TOP);
-//  windmill.board2 = DISPLAY_FLOW;
-//  WS2812_FlowUpdate();
-//  WS2812_FlowUpdate();
-//  WS2812_FlowUpdate();
-//  WS2812_FlowUpdate();
+//    WS2812_SetState(STRIP2,DISPLAY_TOP);
+//    WS2812_SetState(STRIP1,DISPLAY_ON);
   uint16_t counter = 0;
   while (1)
   {
@@ -143,9 +149,10 @@ int main(void)
 //    windmill.strip2 = DISPLAY_ON;
 //    windmill.strip2 = DISPLAY_ON;
 //    windmill.board2 = DISPLAY_FLOW;
-    WS2812_SetState(BOARD2,DISPLAY_FLOW);
-    WS2812_FlowUpdate();
-    HAL_Delay(200);
+//    WS2812_SetState(BOARD2,DISPLAY_FLOW);
+//    WS2812_SetState(BOARD1,DISPLAY_ON);
+//    WS2812_FlowUpdate();
+//    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -158,6 +165,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -184,6 +192,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }

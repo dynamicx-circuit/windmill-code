@@ -24,9 +24,11 @@ typedef struct {
     };
     uint8_t boards[5];
   };
+  uint8_t dma1_state;
+  uint8_t dma2_state;
 }WindmillStruct;
 
-WindmillStruct windmill;
+static WindmillStruct windmill_state;
 
 typedef struct {
   TIM_HandleTypeDef *htim;
@@ -147,63 +149,68 @@ void WS2812_Update(void)
   static uint8_t board_index = 0;
   if(strip_index == 5) strip_index=0;
   if(board_index == 5) board_index=0;
-  for(;strip_index<5;strip_index++){
-    if(windmill.strips[strip_index] &&
-        TIM_CHANNEL_STATE_GET(windmill_tim_channel[strip_index].htim,
-                              windmill_tim_channel[strip_index].tim_channel)
-            == HAL_TIM_CHANNEL_STATE_READY){
-      switch (windmill.strips[strip_index]){
-      case DISPLAY_ON:
-        HAL_TIM_PWM_Start_DMA(
-            windmill_tim_channel[strip_index].htim,windmill_tim_channel[strip_index].tim_channel,
-            (uint32_t*)led_strip_on,(STRIP_LENGTH+1)*24);
+  if(windmill_state.dma1_state == 0){
+    for(;strip_index<5;strip_index++) {
+      if (windmill_state.strips[strip_index]) {
+        switch (windmill_state.strips[strip_index]) {
+        case DISPLAY_ON:
+          HAL_TIM_PWM_Start_DMA(windmill_tim_channel[strip_index].htim,
+                                windmill_tim_channel[strip_index].tim_channel,
+                                (uint32_t *)led_strip_on,
+                                (STRIP_LENGTH + 1) * 24);
+          break;
+        case DISPLAY_OFF:
+          HAL_TIM_PWM_Start_DMA(windmill_tim_channel[strip_index].htim,
+                                windmill_tim_channel[strip_index].tim_channel,
+                                (uint32_t *)led_strip_off,
+                                (STRIP_LENGTH + 1) * 24);
+          break;
+        case DISPLAY_TOP:
+          HAL_TIM_PWM_Start_DMA(windmill_tim_channel[strip_index].htim,
+                                windmill_tim_channel[strip_index].tim_channel,
+                                (uint32_t *)led_strip_top,
+                                (STRIP_LENGTH + 1) * 24);
+          break;
+        default:
+          break;
+        }
+        windmill_state.dma1_state = 1;
+        windmill_state.strips[strip_index] = WAIT_FOR_DISPLAY;
+        strip_index++;
         break;
-      case DISPLAY_OFF:
-        HAL_TIM_PWM_Start_DMA(
-            windmill_tim_channel[strip_index].htim,windmill_tim_channel[strip_index].tim_channel,
-            (uint32_t*)led_strip_off,(STRIP_LENGTH+1)*24);
-        break;
-      case DISPLAY_TOP:
-        HAL_TIM_PWM_Start_DMA(
-            windmill_tim_channel[strip_index].htim,windmill_tim_channel[strip_index].tim_channel,
-            (uint32_t*)led_strip_top,(STRIP_LENGTH+1)*24);
-        break;
-      default:break;
       }
-      windmill.strips[strip_index] = WAIT_FOR_DISPLAY;
-      strip_index++;
-      break;
     }
   }
-  for(;board_index<5;board_index++){
-    if(windmill.boards[board_index] &&
-        TIM_CHANNEL_STATE_GET(windmill_tim_channel[board_index+5].htim,
-                              windmill_tim_channel[board_index+5].tim_channel)
-            == HAL_TIM_CHANNEL_STATE_READY){
-      switch (windmill.boards[board_index]) {
-      case DISPLAY_ON:
-        HAL_TIM_PWM_Start_DMA(
-            windmill_tim_channel[board_index+5].htim,
-            windmill_tim_channel[board_index+5].tim_channel,
-            (uint32_t*)led_board_on,(BOARD_LENGTH+1)*24);
+  if(windmill_state.dma2_state == 0 ){
+    for(;board_index<5;board_index++) {
+      if (windmill_state.boards[board_index]) {
+        switch (windmill_state.boards[board_index]) {
+        case DISPLAY_ON:
+          HAL_TIM_PWM_Start_DMA(
+              windmill_tim_channel[board_index + 5].htim,
+              windmill_tim_channel[board_index + 5].tim_channel,
+              (uint32_t *)led_board_on, (BOARD_LENGTH + 1) * 24);
+          break;
+        case DISPLAY_OFF:
+          HAL_TIM_PWM_Start_DMA(
+              windmill_tim_channel[board_index + 5].htim,
+              windmill_tim_channel[board_index + 5].tim_channel,
+              (uint32_t *)led_board_off, (BOARD_LENGTH + 1) * 24);
+          break;
+        case DISPLAY_FLOW:
+          HAL_TIM_PWM_Start_DMA(
+              windmill_tim_channel[board_index + 5].htim,
+              windmill_tim_channel[board_index + 5].tim_channel,
+              (uint32_t *)led_flow, (BOARD_LENGTH + 1) * 24);
+          break;
+        default:
+          break;
+        }
+        windmill_state.dma2_state = 1;
+        windmill_state.strips[board_index + 5] = WAIT_FOR_DISPLAY;
+        board_index++;
         break;
-      case DISPLAY_OFF:
-        HAL_TIM_PWM_Start_DMA(
-            windmill_tim_channel[board_index+5].htim,
-            windmill_tim_channel[board_index+5].tim_channel,
-            (uint32_t*)led_board_off,(BOARD_LENGTH+1)*24);
-        break;
-      case DISPLAY_FLOW:
-        HAL_TIM_PWM_Start_DMA(
-            windmill_tim_channel[board_index+5].htim,
-            windmill_tim_channel[board_index+5].tim_channel,
-            (uint32_t*)led_flow,(BOARD_LENGTH+1)*24);
-        break;
-      default:break;
       }
-      windmill.strips[board_index+5] = WAIT_FOR_DISPLAY;
-      board_index++;
-      break;
     }
   }
 }
@@ -215,18 +222,20 @@ void WS2812_StopDMA(TIM_HandleTypeDef *htim)
       HAL_TIM_PWM_Stop_DMA(windmill_tim_channel[i].htim,
                            windmill_tim_channel[i].tim_channel);
     }
+    windmill_state.dma1_state = 0;
   }else if(htim->Instance == TIM5 || htim->Instance == TIM8){
     for(uint8_t i=5;i<10;i++){
       HAL_TIM_PWM_Stop_DMA(windmill_tim_channel[i].htim,
                            windmill_tim_channel[i].tim_channel);
     }
+    windmill_state.dma2_state = 0;
   }
 }
 
 void WS2812_SetState(uint8_t number,DisplayType state)
 {
   if(state!=0 && state<4){
-    if(number<5) windmill.strips[number] = state;
-    else if(number<10) windmill.boards[number-5] = state;
+    if(number<5) windmill_state.strips[number] = state;
+    else if(number<10) windmill_state.boards[number-5] = state;
   }
 }
