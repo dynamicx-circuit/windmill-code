@@ -12,9 +12,9 @@
 #define FILTER_BUF_LEN 2
 
 typedef enum{
-  UNIFORM_VELOCITY = 0,
-  SIN_VELOCITY = 1,
-  MOTOR_STOP = 2
+  MOTOR_STOP = 0,
+  UNIFORM_VELOCITY = 1,
+  SIN_VELOCITY = 2,
 }MotorState;
 
 typedef struct{

@@ -125,6 +125,7 @@ int main(void)
   WindmillInit();
   HAL_TIM_Base_Start_IT(&htim3);
   HAL_TIM_Base_Start_IT(&htim4);
+  HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -7,7 +7,7 @@
 #include "main.h"
 #include "user_config.h"
 
-#define SENSOR_DELAY_TIME 20
+#define SENSOR_DELAY_TIME 3
 
 typedef struct {
   union{
