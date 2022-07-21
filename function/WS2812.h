@@ -8,9 +8,9 @@
 #include "tim.h"
 
 #define STRIP_LENGTH 110
-#define BOT_LENGTH 63
-#define TOP_LENGTH STRIP_LENGTH-BOT_LENGTH
-#define BOARD_LENGTH 40*8
+#define BOT_LENGTH 62
+#define TOP_LENGTH (STRIP_LENGTH-BOT_LENGTH)
+#define BOARD_LENGTH (40*8)
 
 #define STRIP1_TIM &htim1
 #define STRIP2_TIM &htim2
@@ -40,8 +40,8 @@
 #define WS2812_L 21
 
 #define WS2812_OFF 0
-#define WS2812_RED 50<<8
-#define WS2812_BLUE 50<<16
+#define WS2812_RED 100<<8
+#define WS2812_BLUE 100
 
 #define WINDMILL_INIT_COLOR WS2812_RED
 

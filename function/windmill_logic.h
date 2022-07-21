@@ -5,12 +5,12 @@
 #ifndef WINDMILL_FUNCTION_WINDMILL_LOGIC_H_
 #define WINDMILL_FUNCTION_WINDMILL_LOGIC_H_
 #include "main.h"
+#include "user_config.h"
 #include "motor.h"
 #include "sensor.h"
 #include "WS2812.h"
 #include "stdlib.h"
 
-#define UPDATE_FREQ 800
 #define FLOW_PRESCALE 160
 
 typedef enum{

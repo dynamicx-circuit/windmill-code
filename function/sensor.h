@@ -5,12 +5,9 @@
 #ifndef WINDMILL_FUNCTION_SENSOR_H_
 #define WINDMILL_FUNCTION_SENSOR_H_
 #include "main.h"
+#include "user_config.h"
 
-#define SENSOR1_GPIO_PIN GPIO_PIN_10
-#define SENSOR2_GPIO_PIN GPIO_PIN_12
-#define SENSOR3_GPIO_PIN GPIO_PIN_4
-#define SENSOR4_GPIO_PIN GPIO_PIN_7
-#define SENSOR5_GPIO_PIN GPIO_PIN_11
+#define SENSOR_DELAY_TIME 20
 
 typedef struct {
   union{
@@ -26,5 +23,6 @@ typedef struct {
 }SensorStruct;
 
 void SensorInit(SensorStruct* _sensor);
+void SensorKeyScan(void);
 
 #endif // WINDMILL_FUNCTION_SENSOR_H_

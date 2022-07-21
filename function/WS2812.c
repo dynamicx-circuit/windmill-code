@@ -29,6 +29,7 @@ typedef struct {
 }WindmillStruct;
 
 static WindmillStruct windmill_state;
+static uint32_t color;
 
 typedef struct {
   TIM_HandleTypeDef *htim;
@@ -59,7 +60,7 @@ uint8_t flow[48] = {
 inline void SetSingleColor(uint8_t led[24],uint32_t color)
 {
   for(uint8_t i=0;i<24;i++){
-    if((color>>i)&1) led[i] = WS2812_H;
+    if((color>>(23-i))&1) led[i] = WS2812_H;
     else led[i] = WS2812_L;
   }
 }
@@ -94,6 +95,7 @@ void WS2812_FlowUpdate(void)
 
 void WS2812_Init(void)
 {
+  color = WINDMILL_INIT_COLOR;
   memset(led_strip_on,0,(STRIP_LENGTH+1)*24);
   memset(led_strip_off,0,(STRIP_LENGTH+1)*24);
   memset(led_strip_top,0,(STRIP_LENGTH+1)*24);
@@ -101,16 +103,16 @@ void WS2812_Init(void)
   memset(led_board_off,0,(STRIP_LENGTH+1)*24);
   memset(led_flow,0,(STRIP_LENGTH+1)*24);
 
-  SetColor(WINDMILL_INIT_COLOR, led_strip_on,STRIP_LENGTH);
+  SetColor(color, led_strip_on,STRIP_LENGTH);
   SetColor(WS2812_OFF, led_strip_off,STRIP_LENGTH);
 
   SetColor(WS2812_OFF, led_strip_top,BOT_LENGTH);
-  SetColor(WINDMILL_INIT_COLOR, &led_strip_top[BOT_LENGTH],TOP_LENGTH);
+  SetColor(color, &led_strip_top[BOT_LENGTH],TOP_LENGTH);
 
-  SetColor(WINDMILL_INIT_COLOR,led_board_on,BOARD_LENGTH);
+  SetColor(color,led_board_on,BOARD_LENGTH);
   SetColor(WS2812_OFF,led_board_off,BOARD_LENGTH);
 
-  SetFlowColor(WINDMILL_INIT_COLOR,led_flow);
+  SetFlowColor(color,led_flow);
 
   windmill_tim_channel[0].htim = STRIP1_TIM;
   windmill_tim_channel[0].tim_channel = STRIP1_CHANNEL;
@@ -143,6 +145,19 @@ void WS2812_Init(void)
   windmill_tim_channel[9].tim_channel = BOARD5_CHANNEL;
 }
 
+void LED_StripOffset(uint8_t num)
+{
+  switch (num) {
+  case 1:
+  case 2:
+  case 3:
+  case 4:
+  case 5:
+    break;
+  default:break;
+  }
+}
+
 void WS2812_Update(void)
 {
   static uint8_t strip_index = 0;
@@ -154,7 +169,9 @@ void WS2812_Update(void)
       if (windmill_state.strips[strip_index]) {
         switch (windmill_state.strips[strip_index]) {
         case DISPLAY_ON:
+          (led_strip_on[STRIP_LENGTH-1],color);
           HAL_TIM_PWM_Start_DMA(windmill_tim_channel[strip_index].htim,
+
                                 windmill_tim_channel[strip_index].tim_channel,
                                 (uint32_t *)led_strip_on,
                                 (STRIP_LENGTH + 1) * 24);
@@ -166,6 +183,7 @@ void WS2812_Update(void)
                                 (STRIP_LENGTH + 1) * 24);
           break;
         case DISPLAY_TOP:
+          LED_StripOffset(strip_index);
           HAL_TIM_PWM_Start_DMA(windmill_tim_channel[strip_index].htim,
                                 windmill_tim_channel[strip_index].tim_channel,
                                 (uint32_t *)led_strip_top,

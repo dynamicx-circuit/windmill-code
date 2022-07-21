@@ -5,7 +5,7 @@
 
 extern ADC_HandleTypeDef hadc1;
 
-#define GetRand(max_lim) rand()%max_lim
+#define GetRand(max_lim) (rand()%max_lim)
 
 typedef struct{
   uint16_t random_seed;
@@ -23,9 +23,7 @@ inline void SetFanBladeState(uint8_t number,FanBladeState state)
 
 void WindmillLogic(void)
 {
-  for(uint8_t i=0;i<5;i++){
-    SetFanBladeState(i,ALL_ON);
-  }
+
 }
 
 void WindmillInit(void)
@@ -54,6 +52,6 @@ void WindmillUpdate(void)
     flow_counter = 0;
     WS2812_FlowUpdate();
   }
-
+  SensorKeyScan();
   WindmillLogic();
 }
