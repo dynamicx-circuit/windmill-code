@@ -71,6 +71,7 @@ void SetColor(uint32_t color,uint8_t leds[][24],uint32_t length)
     SetSingleColor(leds[i],color);
 }
 
+
 void SetFlowColor(uint32_t color,uint8_t leds[BOARD_LENGTH][24])
 {
   uint8_t j=0;
@@ -84,7 +85,7 @@ void SetFlowColor(uint32_t color,uint8_t leds[BOARD_LENGTH][24])
   }
 }
 
-
+//灯板箭头更新
 void WS2812_FlowUpdate(void)
 {
   uint32_t flow_buffer[40];
@@ -146,6 +147,7 @@ void WS2812_Init(void)
   windmill_tim_channel[9].tim_channel = BOARD5_CHANNEL;
 }
 
+//调整等待偏移
 void LED_StripOffset(uint8_t num)
 {
   switch (num) {
@@ -159,6 +161,7 @@ void LED_StripOffset(uint8_t num)
   }
 }
 
+//一次循环只更新一个扇叶，下次循环就从下一片扇叶开始更新
 void WS2812_Update(void)
 {
   static uint8_t strip_index = 0;
