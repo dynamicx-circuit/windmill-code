@@ -7,7 +7,7 @@
 #include "main.h"
 #include "user_config.h"
 
-#define SENSOR_DELAY_TIME 3
+#define SENSOR_DELAY_TIME 5
 
 typedef struct {
   union{
@@ -22,7 +22,7 @@ typedef struct {
   };
 }SensorStruct;
 
-void SensorInit(SensorStruct* _sensor);
+void SensorInit(uint8_t * _sensor);
 void SensorKeyScan(void);
 
 #endif // WINDMILL_FUNCTION_SENSOR_H_

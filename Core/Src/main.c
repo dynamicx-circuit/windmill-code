@@ -62,6 +62,9 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 uint8_t flag = 0;
 //uint8_t counter = 0;
+extern uint16_t windmill_counter;
+uint8_t sensor = 0;
+
 uint8_t led_on[24];
 uint8_t led_off[24];
 
@@ -81,6 +84,44 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 }
 
+void KeyScan(void)
+{
+  static uint16_t sensor_counter[5] = {0,0,0,0,0};
+
+  if(HAL_GPIO_ReadPin(Sensor1_GPIO_Port,Sensor1_Pin) == GPIO_PIN_SET){
+    HAL_Delay(10);
+    if(HAL_GPIO_ReadPin(Sensor1_GPIO_Port,Sensor1_Pin) == GPIO_PIN_SET){
+      sensor|=1;
+    }
+  }
+
+  if(HAL_GPIO_ReadPin(Sensor2_GPIO_Port,Sensor2_Pin) == GPIO_PIN_SET) {
+    HAL_Delay(10);
+    if (HAL_GPIO_ReadPin(Sensor2_GPIO_Port, Sensor2_Pin) == GPIO_PIN_SET) {
+      sensor |= 2;
+    }
+  }
+
+  if(HAL_GPIO_ReadPin(Sensor3_GPIO_Port,Sensor3_Pin) == GPIO_PIN_SET) {
+    HAL_Delay(10);
+    if (HAL_GPIO_ReadPin(Sensor3_GPIO_Port,Sensor3_Pin) == GPIO_PIN_SET) {
+      sensor |= 4;
+    }
+  }
+
+  if(HAL_GPIO_ReadPin(Sensor4_GPIO_Port,Sensor4_Pin) == GPIO_PIN_SET){
+    if(HAL_GPIO_ReadPin(Sensor4_GPIO_Port,Sensor4_Pin) == GPIO_PIN_SET){
+      sensor|=8;
+    }
+  }
+
+  if(HAL_GPIO_ReadPin(Sensor5_GPIO_Port,Sensor5_Pin) == GPIO_PIN_SET){
+    HAL_Delay(10);
+    if(HAL_GPIO_ReadPin(Sensor5_GPIO_Port,Sensor5_Pin) == GPIO_PIN_SET){
+      sensor|=16;
+    }
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -123,19 +164,77 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   WindmillInit();
+//  SensorInit(&sensor);
   HAL_TIM_Base_Start_IT(&htim3);
   HAL_TIM_Base_Start_IT(&htim4);
   HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_SET);
+
+  HAL_ADC_Start(&hadc1);
+  HAL_Delay(1);
+  srand(HAL_ADC_GetValue(&hadc1));
+  HAL_ADC_Stop(&hadc1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t state=0;
+  uint8_t random_num = 0x1F;
+  uint8_t order[5];
+  uint8_t order_counter = 0;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
+    switch (state) {
+    case 0:
+      HAL_Delay(200);
+      for(uint8_t i = 0;i<5;i++) SetFanBladeState(i,ALL_OFF);
+      order_counter = 0;
+      for(uint8_t i=0;i<5;i++) order[i] = i;
+      for(uint8_t i=0;i<5;i++){
+        uint8_t ran = rand()%5;
+        uint8_t temp = order[ran];
+        order[ran] = order[0];
+        order[0] = temp;
+      }
+      state++;
+      HAL_Delay(200);
+      break;
+    case 1:
+      if(order_counter<5){
+//        uint8_t temp;
+        SetFanBladeState(order[order_counter],IMPACTED);
+        while(1){
+          KeyScan();
+          if((sensor>>order[order_counter])&1) {
+            SetFanBladeState(order[order_counter], ALL_ON);
+            order_counter++;
+            sensor = 0;
+            break;
+          }
+//          }else if(sensor&(~(1<<order[order_counter]))){
+//            state = 0;
+//            sensor=0;
+//            break;
+//          }
+//          if(sensor) HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,GPIO_PIN_RESET);
+          sensor=0;
+          HAL_Delay(10);
+        }
+      }else state++;
+      break;
+    case 2:
+      for(uint8_t k=0;k<3;k++){
+        HAL_Delay(200);
+        for(uint8_t i=0;i<5;i++) SetFanBladeState(i,ALL_OFF);
+        HAL_Delay(200);
+        for(uint8_t i=0;i<5;i++) SetFanBladeState(i,ALL_ON);
+      }
+      state = 0;
+      break;
+    default:break;
+    }
   }
   /* USER CODE END 3 */
 }

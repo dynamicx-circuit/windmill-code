@@ -21,5 +21,6 @@ typedef enum{
 
 void WindmillInit(void);
 void WindmillUpdate(void);
+void SetFanBladeState(uint8_t number,FanBladeState state);
 
 #endif // WINDMILL_FUNCTION_WINDMILL_LOGIC_H_

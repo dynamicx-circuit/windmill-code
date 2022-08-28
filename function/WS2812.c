@@ -84,6 +84,7 @@ void SetFlowColor(uint32_t color,uint8_t leds[BOARD_LENGTH][24])
   }
 }
 
+
 void WS2812_FlowUpdate(void)
 {
   uint32_t flow_buffer[40];
@@ -107,7 +108,7 @@ void WS2812_Init(void)
   SetColor(WS2812_OFF, led_strip_off,STRIP_LENGTH);
 
   SetColor(WS2812_OFF, led_strip_top,BOT_LENGTH);
-  SetColor(color, &led_strip_top[BOT_LENGTH],TOP_LENGTH);
+  SetColor(255, &led_strip_top[BOT_LENGTH],TOP_LENGTH);
 
   SetColor(color,led_board_on,BOARD_LENGTH);
   SetColor(WS2812_OFF,led_board_off,BOARD_LENGTH);
